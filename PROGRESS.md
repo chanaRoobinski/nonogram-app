@@ -1,29 +1,26 @@
 # Progress Tracker — Nonogram App
 
-## Current stage: Stage 1 — Core Data Structures
-## Status: In Progress (implementation done, PR pending)
-## Active branch: feature/stage-1-core-data-structures
+## Current stage: Stage 2 — Line Solver
+## Status: Not started
+## Active branch: main
 ## Last updated: 2026-07-02
 
 ### Completed stages ✅
 - [x] Stage 0 — Project Scaffolding & CI (pushed directly to `main`, CI run 28551662417 green)
   - Repo: https://github.com/chanaRoobinski/nonogram-app
+- [x] Stage 1 — Core Data Structures (PR #1, merged, CI run 28552133300 green)
+  - `Clue`, `Cell`/`Line`, `Grid` (with `transpose()`), `exceptions.py`
+  - 28 unit tests, 100% coverage on `core`
 
 ### Current stage in progress 🚧
-- [ ] Stage 1 — Core Data Structures
-  - [x] Branch `feature/stage-1-core-data-structures` created
-  - [x] `Clue` implemented + validated (non-bool ints, each run >= 1)
-  - [x] `Line` implemented (FILLED/EMPTY/UNKNOWN enum-backed cells)
-  - [x] `Grid` implemented (row/column access via transposition)
-  - [x] `exceptions.py`: `InvalidClueError`, `ContradictionError` (+ `NonogramError` base)
-  - [x] Unit tests: 28 tests, 100% coverage on `core` (target was ≥90%)
-  - [x] `ruff check .` passes; full suite green locally
-  - [ ] PR opened
-  - [ ] CI green on PR
-  - [ ] PR merged to `main`
+- [ ] Stage 2 — Line Solver
+  - [ ] Branch `feature/stage-2-line-solver` created
+  - [ ] `solve_line(clue: Clue, current_state: Line) -> Line` implemented (DP-based)
+  - [ ] Edge cases: empty clue, fully-known line, contradiction, partial-overlap-only case
+  - [ ] Unit tests covering all edge cases
+  - [ ] PR opened and merged
 
 ### Future stages ⏳
-- [ ] Stage 2 — Line Solver
 - [ ] Stage 3 — Full Engine (propagation + backtracking)
 - [ ] Stage 4 — Uniqueness Check
 - [ ] Stage 5 — Difficulty Evaluator

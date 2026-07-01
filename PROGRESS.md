@@ -1,8 +1,8 @@
 # Progress Tracker — Nonogram App
 
 ## Current stage: Stage 1 — Core Data Structures
-## Status: Not started
-## Active branch: main
+## Status: In Progress (implementation done, PR pending)
+## Active branch: feature/stage-1-core-data-structures
 ## Last updated: 2026-07-02
 
 ### Completed stages ✅
@@ -11,13 +11,16 @@
 
 ### Current stage in progress 🚧
 - [ ] Stage 1 — Core Data Structures
-  - [ ] Branch `feature/stage-1-core-data-structures` created
-  - [ ] `Clue` implemented + validated
-  - [ ] `Line` implemented (FILLED/EMPTY/UNKNOWN enum)
-  - [ ] `Grid` implemented (row/column access via transposition)
-  - [ ] `exceptions.py`: `InvalidClueError`, `ContradictionError`
-  - [ ] Unit tests, ≥90% coverage on `core`
-  - [ ] PR opened and merged
+  - [x] Branch `feature/stage-1-core-data-structures` created
+  - [x] `Clue` implemented + validated (non-bool ints, each run >= 1)
+  - [x] `Line` implemented (FILLED/EMPTY/UNKNOWN enum-backed cells)
+  - [x] `Grid` implemented (row/column access via transposition)
+  - [x] `exceptions.py`: `InvalidClueError`, `ContradictionError` (+ `NonogramError` base)
+  - [x] Unit tests: 28 tests, 100% coverage on `core` (target was ≥90%)
+  - [x] `ruff check .` passes; full suite green locally
+  - [ ] PR opened
+  - [ ] CI green on PR
+  - [ ] PR merged to `main`
 
 ### Future stages ⏳
 - [ ] Stage 2 — Line Solver
@@ -38,6 +41,11 @@
   string pipe) to avoid the token being mangled, and requires a classic PAT with `repo`,
   `read:org`, and `gist` scopes at minimum — a token missing `read:org` fails with
   "missing required scope" even though the token itself is valid.
+- Empty-line `Clue` representation: `Clue([])` for a fully empty line, not `Clue([0])`. Every
+  value inside a non-empty clue must be a positive integer (>= 1); a `0` embedded in the list
+  (e.g. `[0, 3]`) is invalid and raises `InvalidClueError`. User confirmed 2026-07-02.
+- `Grid` stores only cell state (rows of `Cell` values); `Clue`s are a separate concern, matched
+  against rows/columns by index later by the solver — not stored inside `Grid` itself.
 
 ### Blockers / decisions needed
 - (none currently open)

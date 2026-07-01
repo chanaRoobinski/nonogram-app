@@ -1,8 +1,8 @@
 # Progress Tracker — Nonogram App
 
 ## Current stage: Stage 2 — Line Solver
-## Status: Not started
-## Active branch: main
+## Status: In Progress (implementation done, PR open, awaiting merge)
+## Active branch: feature/stage-2-line-solver
 ## Last updated: 2026-07-02
 
 ### Completed stages ✅
@@ -14,11 +14,19 @@
 
 ### Current stage in progress 🚧
 - [ ] Stage 2 — Line Solver
-  - [ ] Branch `feature/stage-2-line-solver` created
-  - [ ] `solve_line(clue: Clue, current_state: Line) -> Line` implemented (DP-based)
-  - [ ] Edge cases: empty clue, fully-known line, contradiction, partial-overlap-only case
-  - [ ] Unit tests covering all edge cases
-  - [ ] PR opened and merged
+  - [x] Branch `feature/stage-2-line-solver` created
+  - [x] `solve_line(clue, current_state) -> Line` implemented: DP with
+        mandatory-gap-folded run placement (forward pass) + suffix-feasibility pass
+        (backward), combined to mark each cell FILLED-achievable / EMPTY-achievable
+        across all valid arrangements
+  - [x] Raises `ContradictionError` when no arrangement is consistent with known cells
+  - [x] 13 unit tests (incl. partial-overlap-only, contradiction, empty clue,
+        mandatory gap enforcement, already-known-line pass-through), 100% coverage
+        on `solver`
+  - [x] `ruff check .` passes; full suite green locally (41 tests, 100% coverage)
+  - [ ] PR opened
+  - [ ] CI green on PR
+  - [ ] PR merged to `main`
 
 ### Future stages ⏳
 - [ ] Stage 3 — Full Engine (propagation + backtracking)

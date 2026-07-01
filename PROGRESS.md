@@ -1,28 +1,25 @@
 # Progress Tracker — Nonogram App
 
-## Current stage: Stage 0 — Project Scaffolding & CI
-## Status: In Progress
+## Current stage: Stage 1 — Core Data Structures
+## Status: Not started
 ## Active branch: main
 ## Last updated: 2026-07-02
 
 ### Completed stages ✅
-- (none yet)
+- [x] Stage 0 — Project Scaffolding & CI (pushed directly to `main`, CI run 28551662417 green)
+  - Repo: https://github.com/chanaRoobinski/nonogram-app
 
 ### Current stage in progress 🚧
-- [ ] Stage 0 — Project Scaffolding & CI
-  - [x] Folder structure created (src/nonogram/*, tests/*)
-  - [x] `.venv` created with Python 3.10.7
-  - [x] `requirements.txt` / `requirements-dev.txt` (pytest, pytest-cov, ruff)
-  - [x] `pyproject.toml`
-  - [x] `.github/workflows/ci.yml`
-  - [x] Dummy smoke test passes locally (`pytest --cov=src`)
-  - [x] `ruff check .` passes locally
-  - [ ] GitHub repo created (`nonogram-app`, public)
-  - [ ] Initial commit pushed to `main`
-  - [ ] CI confirmed green on GitHub Actions
+- [ ] Stage 1 — Core Data Structures
+  - [ ] Branch `feature/stage-1-core-data-structures` created
+  - [ ] `Clue` implemented + validated
+  - [ ] `Line` implemented (FILLED/EMPTY/UNKNOWN enum)
+  - [ ] `Grid` implemented (row/column access via transposition)
+  - [ ] `exceptions.py`: `InvalidClueError`, `ContradictionError`
+  - [ ] Unit tests, ≥90% coverage on `core`
+  - [ ] PR opened and merged
 
 ### Future stages ⏳
-- [ ] Stage 1 — Core Data Structures
 - [ ] Stage 2 — Line Solver
 - [ ] Stage 3 — Full Engine (propagation + backtracking)
 - [ ] Stage 4 — Uniqueness Check

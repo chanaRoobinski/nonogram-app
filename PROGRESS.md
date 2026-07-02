@@ -1,8 +1,8 @@
 # Progress Tracker — Nonogram App
 
-## Current stage: Stage 3 — Full Engine (propagation + backtracking)
+## Current stage: Stage 4 — Uniqueness Check
 ## Status: In Progress (implementation done, PR open, awaiting merge)
-## Active branch: feature/stage-3-solver-engine
+## Active branch: feature/stage-4-uniqueness-check
 ## Last updated: 2026-07-02
 
 ### Completed stages ✅
@@ -15,36 +15,35 @@
   - `solve_line(clue, current_state) -> Line`: DP with mandatory-gap-folded run
     placement + forward/backward feasibility passes
   - 13 unit tests, 100% coverage on `solver` (as of that stage)
+- [x] Stage 3 — Full Engine (PR #3, merged, CI run 28573557383 green)
+  - `propagate()` (row/column wake-up queue) + `solve()` (propagation +
+    backtracking, `SolveStats` for Stage 5)
+  - `tests/fixtures/known_puzzles.py` populated (5x5, 10x10, 4x4 checkerboard)
+  - 53 tests, 100% coverage (as of that stage)
 
 ### Current stage in progress 🚧
-- [ ] Stage 3 — Full Engine (propagation + backtracking)
-  - [x] Branch `feature/stage-3-solver-engine` created
-  - [x] `propagate(grid, row_clues, col_clues, dirty_rows=None, dirty_cols=None) -> (Grid, PropagationStats)`:
-        row/column wake-up queue — only re-checks lines woken by a change in the
-        perpendicular direction; `dirty_rows`/`dirty_cols` let callers scope an
-        initial re-check (used by backtracking to avoid re-solving the whole grid
-        per guess)
-  - [x] `solve(grid, row_clues, col_clues, max_backtrack_depth=None) -> SolveResult`:
-        propagates, then guesses the first UNKNOWN cell (FILLED then EMPTY) and
-        recurses on contradiction; `SolveResult.status` is one of `SOLVED`,
-        `CONTRADICTION`, `MAX_DEPTH_EXCEEDED`
-  - [x] `SolveStats` tracks `propagation_calls`, `lines_solved`,
-        `cells_deduced_by_propagation`, `guesses`, `max_backtrack_depth` — feeds
-        Stage 5's difficulty evaluator
-  - [x] `tests/fixtures/known_puzzles.py` populated: a 5x5 and 10x10 puzzle solvable
-        by propagation alone, plus a 4x4 checkerboard that requires backtracking
-        (clues are derived automatically from each hand-authored solution, so they
-        can't drift out of sync)
-  - [x] Unit tests (`test_engine.py`) + integration test (`test_solver_pipeline.py`)
-        against `known_puzzles.py`, plus a 20x20 performance baseline (~0.25s,
-        generous 30s ceiling — informational, not a strict contract)
-  - [x] `ruff check .` passes; full suite green locally (53 tests, 100% coverage)
+- [ ] Stage 4 — Uniqueness Check
+  - [x] Branch `feature/stage-4-uniqueness-check` created
+  - [x] `check_uniqueness(row_clues, col_clues, max_backtrack_depth=None) -> UniquenessResult`:
+        solves for a first solution, then for every cell forces the opposite of
+        its value (all other cells unconstrained) and re-solves; any genuine
+        second solution must differ from the first at some cell, so if none of
+        these per-cell searches finds an alternative, the first solution is
+        provably unique. A puzzle with no solution at all reports `is_unique=False`.
+  - [x] `has_unique_solution(row_clues, col_clues, max_backtrack_depth=None) -> bool`
+        convenience wrapper
+  - [x] `UniquenessResult` also exposes `first_solution`/`alternate_solution` for
+        debugging, per the skill's suggestion
+  - [x] Unit tests: known-unique (propagation-only fixture), deliberately
+        ambiguous (the Stage 3 checkerboard fixture turned out to have a
+        complementary second solution — reused directly), and unsolvable-puzzle
+        edge case
+  - [x] `ruff check .` passes; full suite green locally (59 tests, 100% coverage)
   - [ ] PR opened
   - [ ] CI green on PR
   - [ ] PR merged to `main`
 
 ### Future stages ⏳
-- [ ] Stage 4 — Uniqueness Check
 - [ ] Stage 5 — Difficulty Evaluator
 - [ ] Stage 6 — Puzzle Generator
 - [ ] Stage 7 — FastAPI Layer
@@ -74,6 +73,16 @@
   (unlimited), matching the literal default in the skill's own `solve()` signature. Rather than
   inventing an arbitrary default timeout number, the cap is left fully caller-configurable;
   Stage 6's generator can pass a bounded value when it needs one.
+- Stage 4's uniqueness check forces *every* cell to its opposite value (not just "one specific
+  cell" as the skill's example phrasing suggests) before concluding a solution is unique. A
+  single arbitrary cell only proves that one cell has no alternative — it can't rule out a second
+  solution that differs elsewhere. Checking all cells (short-circuiting on the first alternate
+  found) is the minimum needed for a mathematically sound "yes, unique" answer, so this was
+  treated as a necessary refinement of the skill's example rather than a new decision to check
+  with the user. Cost: O(rows × cols) `solve()` calls in the unique (worst) case — acceptable for
+  now; revisit if Stage 6 generation on large grids is too slow.
+- A puzzle with zero valid solutions is reported as `is_unique=False` (not an error) — "unique"
+  requires exactly one solution, and zero doesn't qualify.
 
 ### Blockers / decisions needed
 - (none currently open)

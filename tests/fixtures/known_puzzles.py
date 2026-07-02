@@ -4,7 +4,8 @@ solution so they can never drift out of sync with it."""
 
 from dataclasses import dataclass
 
-from nonogram.core.grid import Cell, Clue, Grid
+from nonogram.core.grid import Cell, Grid
+from nonogram.generator.pattern_source import extract_clues
 
 
 @dataclass(frozen=True)
@@ -15,21 +16,6 @@ class KnownPuzzle:
     solution: Grid
 
 
-def _line_clue(cells):
-    runs = []
-    run_length = 0
-    for cell in cells:
-        if cell is Cell.FILLED:
-            run_length += 1
-        else:
-            if run_length:
-                runs.append(run_length)
-            run_length = 0
-    if run_length:
-        runs.append(run_length)
-    return Clue(runs)
-
-
 def _solution_from_strings(rows):
     return Grid(
         [[Cell.FILLED if ch == "#" else Cell.EMPTY for ch in row] for row in rows]
@@ -38,8 +24,7 @@ def _solution_from_strings(rows):
 
 def _puzzle_from_solution(name, rows_as_strings):
     solution = _solution_from_strings(rows_as_strings)
-    row_clues = [_line_clue(row) for row in solution.rows]
-    col_clues = [_line_clue(col) for col in solution.columns]
+    row_clues, col_clues = extract_clues(solution)
     return KnownPuzzle(name, row_clues, col_clues, solution)
 
 

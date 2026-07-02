@@ -8,3 +8,8 @@ class InvalidClueError(NonogramError, ValueError):
 
 class ContradictionError(NonogramError):
     """Raised by the solver when no arrangement satisfies the given constraints."""
+
+
+class GenerationTimeoutError(NonogramError):
+    """Raised when the puzzle generator exhausts its attempt budget without
+    finding any valid (unique-solution, human-suitable) puzzle at all."""

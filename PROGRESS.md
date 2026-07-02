@@ -1,8 +1,8 @@
 # Progress Tracker — Nonogram App
 
-## Current stage: Stage 4 — Uniqueness Check
+## Current stage: Stage 5 — Difficulty Evaluator
 ## Status: In Progress (implementation done, PR open, awaiting merge)
-## Active branch: feature/stage-4-uniqueness-check
+## Active branch: feature/stage-5-difficulty-evaluator
 ## Last updated: 2026-07-02
 
 ### Completed stages ✅
@@ -20,31 +20,35 @@
     backtracking, `SolveStats` for Stage 5)
   - `tests/fixtures/known_puzzles.py` populated (5x5, 10x10, 4x4 checkerboard)
   - 53 tests, 100% coverage (as of that stage)
+- [x] Stage 4 — Uniqueness Check (PR #4, merged, CI run 28575956258 green)
+  - `check_uniqueness()` / `has_unique_solution()`: exhaustive per-cell
+    opposite-value re-solve, short-circuiting on first alternate found
+  - 59 tests, 100% coverage (as of that stage)
 
 ### Current stage in progress 🚧
-- [ ] Stage 4 — Uniqueness Check
-  - [x] Branch `feature/stage-4-uniqueness-check` created
-  - [x] `check_uniqueness(row_clues, col_clues, max_backtrack_depth=None) -> UniquenessResult`:
-        solves for a first solution, then for every cell forces the opposite of
-        its value (all other cells unconstrained) and re-solves; any genuine
-        second solution must differ from the first at some cell, so if none of
-        these per-cell searches finds an alternative, the first solution is
-        provably unique. A puzzle with no solution at all reports `is_unique=False`.
-  - [x] `has_unique_solution(row_clues, col_clues, max_backtrack_depth=None) -> bool`
-        convenience wrapper
-  - [x] `UniquenessResult` also exposes `first_solution`/`alternate_solution` for
-        debugging, per the skill's suggestion
-  - [x] Unit tests: known-unique (propagation-only fixture), deliberately
-        ambiguous (the Stage 3 checkerboard fixture turned out to have a
-        complementary second solution — reused directly), and unsolvable-puzzle
-        edge case
-  - [x] `ruff check .` passes; full suite green locally (59 tests, 100% coverage)
+- [ ] Stage 5 — Difficulty Evaluator
+  - [x] Branch `feature/stage-5-difficulty-evaluator` created
+  - [x] Scoring formula confirmed with user (2026-07-02): `score = guesses +
+        (max_backtrack_depth ** 2) * 5`. Propagation-only stats contribute 0 —
+        pure logic deduction is always "free"/easy.
+  - [x] Category thresholds confirmed with user: Easy = 0, Medium = 1–10,
+        Hard = 11–40, Very Hard = 41+
+  - [x] Reject ceiling confirmed with user: score > 100 → `suitable_for_human =
+        False` (Stage 6's generator should reject-and-retry, not hand this to a
+        user, even though it's technically still "Very Hard")
+  - [x] `evaluate_difficulty(solve_stats) -> DifficultyResult` implemented
+        (`score`, `category`, `suitable_for_human`)
+  - [x] Unit tests: synthetic `SolveStats` across all category boundaries + the
+        suitability threshold (exactly 100 vs. 101)
+  - [x] Integration test (`test_generate_and_evaluate.py`): real Stage 3/4
+        fixtures — propagation-only puzzles score 0/Easy; the puzzle requiring
+        backtracking is confirmed NOT Easy
+  - [x] `ruff check .` passes; full suite green locally (72 tests, 100% coverage)
   - [ ] PR opened
   - [ ] CI green on PR
   - [ ] PR merged to `main`
 
 ### Future stages ⏳
-- [ ] Stage 5 — Difficulty Evaluator
 - [ ] Stage 6 — Puzzle Generator
 - [ ] Stage 7 — FastAPI Layer
 - [ ] Stage 8 — Image Recognition Interface (stub only)

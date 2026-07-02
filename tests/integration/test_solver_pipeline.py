@@ -1,24 +1,10 @@
 import random
 import time
 
-from nonogram.core.grid import Cell, Clue, Grid
+from nonogram.core.grid import Cell, Grid
+from nonogram.generator.pattern_source import extract_clues, line_clue
 from nonogram.solver.engine import SolveStatus, solve
 from tests.fixtures.known_puzzles import ALL_KNOWN_PUZZLES
-
-
-def _extract_clue(cells):
-    runs = []
-    run_length = 0
-    for cell in cells:
-        if cell is Cell.FILLED:
-            run_length += 1
-        else:
-            if run_length:
-                runs.append(run_length)
-            run_length = 0
-    if run_length:
-        runs.append(run_length)
-    return Clue(runs)
 
 
 def _random_solved_grid(rows, cols, density, seed):
@@ -45,8 +31,7 @@ class TestPerformanceBaseline:
         # check that the solver's answer is *valid* (matches the clues it was
         # given), not that it's byte-for-byte the grid we happened to generate.
         seed_solution = _random_solved_grid(20, 20, density=0.45, seed=42)
-        row_clues = [_extract_clue(row) for row in seed_solution.rows]
-        col_clues = [_extract_clue(col) for col in seed_solution.columns]
+        row_clues, col_clues = extract_clues(seed_solution)
         blank = Grid.empty(20, 20)
 
         start = time.perf_counter()
@@ -54,8 +39,8 @@ class TestPerformanceBaseline:
         duration = time.perf_counter() - start
 
         assert result.status is SolveStatus.SOLVED
-        assert [_extract_clue(row) for row in result.grid.rows] == row_clues
-        assert [_extract_clue(col) for col in result.grid.columns] == col_clues
+        assert [line_clue(row) for row in result.grid.rows] == row_clues
+        assert [line_clue(col) for col in result.grid.columns] == col_clues
         # Baseline only, not a strict perf contract (per skill Stage 3) — a
         # generous ceiling that only trips on a catastrophic regression.
         assert duration < 30

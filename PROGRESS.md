@@ -1,8 +1,8 @@
 # Progress Tracker — Nonogram App
 
-## Current stage: Stage 5 — Difficulty Evaluator
+## Current stage: Stage 6 — Puzzle Generator
 ## Status: In Progress (implementation done, PR open, awaiting merge)
-## Active branch: feature/stage-5-difficulty-evaluator
+## Active branch: feature/stage-6-puzzle-generator
 ## Last updated: 2026-07-02
 
 ### Completed stages ✅
@@ -24,32 +24,48 @@
   - `check_uniqueness()` / `has_unique_solution()`: exhaustive per-cell
     opposite-value re-solve, short-circuiting on first alternate found
   - 59 tests, 100% coverage (as of that stage)
+- [x] Stage 5 — Difficulty Evaluator (PR #5, merged, CI run 28579896165 green)
+  - `evaluate_difficulty()`: user-confirmed formula/thresholds/reject ceiling
+  - 72 tests, 100% coverage (as of that stage)
 
 ### Current stage in progress 🚧
-- [ ] Stage 5 — Difficulty Evaluator
-  - [x] Branch `feature/stage-5-difficulty-evaluator` created
-  - [x] Scoring formula confirmed with user (2026-07-02): `score = guesses +
-        (max_backtrack_depth ** 2) * 5`. Propagation-only stats contribute 0 —
-        pure logic deduction is always "free"/easy.
-  - [x] Category thresholds confirmed with user: Easy = 0, Medium = 1–10,
-        Hard = 11–40, Very Hard = 41+
-  - [x] Reject ceiling confirmed with user: score > 100 → `suitable_for_human =
-        False` (Stage 6's generator should reject-and-retry, not hand this to a
-        user, even though it's technically still "Very Hard")
-  - [x] `evaluate_difficulty(solve_stats) -> DifficultyResult` implemented
-        (`score`, `category`, `suitable_for_human`)
-  - [x] Unit tests: synthetic `SolveStats` across all category boundaries + the
-        suitability threshold (exactly 100 vs. 101)
-  - [x] Integration test (`test_generate_and_evaluate.py`): real Stage 3/4
-        fixtures — propagation-only puzzles score 0/Easy; the puzzle requiring
-        backtracking is confirmed NOT Easy
-  - [x] `ruff check .` passes; full suite green locally (72 tests, 100% coverage)
+- [ ] Stage 6 — Puzzle Generator
+  - [x] Branch `feature/stage-6-puzzle-generator` created
+  - [x] `pattern_source.py`: `PatternSource` ABC (`generate(num_rows, num_cols)
+        -> Grid`) so a future image-based source (Stage 8) can plug in without
+        changing `puzzle_generator.py`. `RandomPatternSource` (noise + majority-
+        rule smoothing pass) and `ManualPatternSource` (wraps a hand-built grid)
+        implement it now, per the skill's "manual/random now; image-based later"
+  - [x] `line_clue(cells) -> Clue` / `extract_clues(pattern) -> (row_clues,
+        col_clues)` — the public version of clue-derivation; refactored
+        `tests/fixtures/known_puzzles.py` and `test_solver_pipeline.py` to reuse
+        it instead of keeping their own private duplicate implementations
+  - [x] `puzzle_generator.py`: `generate_puzzle(num_rows, num_cols,
+        requested_category, max_attempts, pattern_source=None,
+        max_backtrack_depth=None) -> Puzzle` — the generate-and-test loop
+        (unique solution check → solve → evaluate difficulty → reject if not
+        `suitable_for_human`). Returns the closest match found if
+        `max_attempts` is exhausted without an exact match
+        (`Puzzle.exact_match=False`); raises `GenerationTimeoutError` only if
+        no valid puzzle was found at all
+  - [x] `GenerationTimeoutError` added to `core/exceptions.py`
+  - [x] Unit tests for `pattern_source.py` and `puzzle_generator.py`, including
+        a monkeypatched test to deterministically exercise the
+        "reject an unsuitable-for-human candidate" branch (naturally-occurring
+        random patterns turned out to rarely exceed the score-100 ceiling —
+        smoothed/noise patterns tend to be over-constrained rather than
+        ambiguous, so real search wasn't a reliable way to hit that branch)
+  - [x] Integration test extending `test_generate_and_evaluate.py`: requesting
+        Easy/Medium at 10x10 with a fixed seed actually returns a puzzle
+        evaluated at that difficulty with a unique solution (Hard/Very Hard
+        weren't reliably reachable within a reasonable attempt budget at this
+        pattern-source configuration — not pursued further, see decisions below)
+  - [x] `ruff check .` passes; full suite green locally (89 tests, 100% coverage)
   - [ ] PR opened
   - [ ] CI green on PR
   - [ ] PR merged to `main`
 
 ### Future stages ⏳
-- [ ] Stage 6 — Puzzle Generator
 - [ ] Stage 7 — FastAPI Layer
 - [ ] Stage 8 — Image Recognition Interface (stub only)
 - [ ] Stage 9 — Documentation & Polish
@@ -87,6 +103,24 @@
   now; revisit if Stage 6 generation on large grids is too slow.
 - A puzzle with zero valid solutions is reported as `is_unique=False` (not an error) — "unique"
   requires exactly one solution, and zero doesn't qualify.
+- `max_attempts` on `generate_puzzle()` has no default (required parameter), unlike
+  `max_backtrack_depth`'s `None`-means-unlimited default. Unlike backtracking (a complete search
+  bounded by grid size, so "unlimited" is safe), the space of random *patterns* to try is
+  unbounded — an unlimited default here risks a genuine infinite loop if a requested difficulty is
+  structurally unreachable at a given size. Rather than inventing a magic default number, the
+  caller must decide (Stage 7's API layer can pick one informed by real performance data once it
+  exists).
+- `generate_puzzle()` reconciles two slightly different descriptions in the skill (the pseudocode
+  raises on exhausting `max_attempts`; the prose says to "return the closest match found... with a
+  clear flag"): it returns the closest-category match with `exact_match=False` if attempts are
+  exhausted but *some* valid (unique, human-suitable) puzzle was found, and only raises
+  `GenerationTimeoutError` if *no* valid puzzle was found at all. Treated as a natural synthesis of
+  the skill's own two statements, not a new ambiguous decision needing separate sign-off.
+- `PatternSource` is an ABC (`RandomPatternSource`, `ManualPatternSource` now) rather than a bare
+  function, specifically so the future image-based source (explicitly flagged as a later phase in
+  the skill's locked decisions) can be added as another implementation without touching
+  `puzzle_generator.py` — directly serves the skill's own "no architecture change needed" goal for
+  that phase.
 
 ### Blockers / decisions needed
 - (none currently open)

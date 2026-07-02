@@ -1,8 +1,8 @@
 # Progress Tracker — Nonogram App
 
-## Current stage: Stage 6 — Puzzle Generator
+## Current stage: Stage 7 — FastAPI Layer
 ## Status: In Progress (implementation done, PR open, awaiting merge)
-## Active branch: feature/stage-6-puzzle-generator
+## Active branch: feature/stage-7-api-layer
 ## Last updated: 2026-07-02
 
 ### Completed stages ✅
@@ -27,46 +27,38 @@
 - [x] Stage 5 — Difficulty Evaluator (PR #5, merged, CI run 28579896165 green)
   - `evaluate_difficulty()`: user-confirmed formula/thresholds/reject ceiling
   - 72 tests, 100% coverage (as of that stage)
+- [x] Stage 6 — Puzzle Generator (PR #6, merged, CI run 28583759903 green)
+  - `PatternSource` ABC (`RandomPatternSource`, `ManualPatternSource`) +
+    `generate_puzzle()` generate-and-test loop
+  - 89 tests, 100% coverage (as of that stage)
 
 ### Current stage in progress 🚧
-- [ ] Stage 6 — Puzzle Generator
-  - [x] Branch `feature/stage-6-puzzle-generator` created
-  - [x] `pattern_source.py`: `PatternSource` ABC (`generate(num_rows, num_cols)
-        -> Grid`) so a future image-based source (Stage 8) can plug in without
-        changing `puzzle_generator.py`. `RandomPatternSource` (noise + majority-
-        rule smoothing pass) and `ManualPatternSource` (wraps a hand-built grid)
-        implement it now, per the skill's "manual/random now; image-based later"
-  - [x] `line_clue(cells) -> Clue` / `extract_clues(pattern) -> (row_clues,
-        col_clues)` — the public version of clue-derivation; refactored
-        `tests/fixtures/known_puzzles.py` and `test_solver_pipeline.py` to reuse
-        it instead of keeping their own private duplicate implementations
-  - [x] `puzzle_generator.py`: `generate_puzzle(num_rows, num_cols,
-        requested_category, max_attempts, pattern_source=None,
-        max_backtrack_depth=None) -> Puzzle` — the generate-and-test loop
-        (unique solution check → solve → evaluate difficulty → reject if not
-        `suitable_for_human`). Returns the closest match found if
-        `max_attempts` is exhausted without an exact match
-        (`Puzzle.exact_match=False`); raises `GenerationTimeoutError` only if
-        no valid puzzle was found at all
-  - [x] `GenerationTimeoutError` added to `core/exceptions.py`
-  - [x] Unit tests for `pattern_source.py` and `puzzle_generator.py`, including
-        a monkeypatched test to deterministically exercise the
-        "reject an unsuitable-for-human candidate" branch (naturally-occurring
-        random patterns turned out to rarely exceed the score-100 ceiling —
-        smoothed/noise patterns tend to be over-constrained rather than
-        ambiguous, so real search wasn't a reliable way to hit that branch)
-  - [x] Integration test extending `test_generate_and_evaluate.py`: requesting
-        Easy/Medium at 10x10 with a fixed seed actually returns a puzzle
-        evaluated at that difficulty with a unique solution (Hard/Very Hard
-        weren't reliably reachable within a reasonable attempt budget at this
-        pattern-source configuration — not pursued further, see decisions below)
-  - [x] `ruff check .` passes; full suite green locally (89 tests, 100% coverage)
+- [ ] Stage 7 — FastAPI Layer
+  - [x] Branch `feature/stage-7-api-layer` created
+  - [x] `fastapi` + `uvicorn[standard]` added to `requirements.txt`; `httpx`
+        (needed by FastAPI's `TestClient`) added to `requirements-dev.txt`
+  - [x] `api/schemas.py`: `GenerateRequest`/`GenerateResponse`,
+        `SolveRequest`/`SolveResponse`, shared `DifficultyLevel` enum
+  - [x] `POST /puzzles/generate` (`generator_router.py`): wraps
+        `generate_puzzle()`; `GenerationTimeoutError` → HTTP 422
+  - [x] `POST /puzzles/solve` (`solver_router.py`): wraps `solve()`;
+        `InvalidClueError` → HTTP 422
+  - [x] `api/main.py` assembles the app; automatic docs at `/docs`,
+        `/openapi.json`
+  - [x] Integration tests (`test_api.py`) via FastAPI's `TestClient`: generate
+        (happy path, determinism for a fixed seed, validation errors),
+        solve (happy path, contradiction, invalid clue, `max_backtrack_depth`),
+        docs/openapi availability, and a monkeypatched test for the
+        generation-timeout → 422 branch (real `RandomPatternSource` rarely
+        fails uniqueness on the very first attempt, so that branch isn't
+        reliably reachable through genuine randomness in a fast test)
+  - [x] `ruff check .` passes; full suite green locally (100 tests, 100%
+        coverage)
   - [ ] PR opened
   - [ ] CI green on PR
   - [ ] PR merged to `main`
 
 ### Future stages ⏳
-- [ ] Stage 7 — FastAPI Layer
 - [ ] Stage 8 — Image Recognition Interface (stub only)
 - [ ] Stage 9 — Documentation & Polish
 
@@ -121,6 +113,20 @@
   the skill's locked decisions) can be added as another implementation without touching
   `puzzle_generator.py` — directly serves the skill's own "no architecture change needed" goal for
   that phase.
+- `GenerateResponse` deliberately excludes the solution grid. The skill describes
+  `POST /puzzles/solve` as existing "for future use by the frontend to validate a user's solution
+  too" — which only makes sense if `/generate` withholds the answer in the first place (otherwise
+  there'd be nothing to validate against). Treated as a direct, low-risk inference from the skill's
+  own stated purpose for the solve endpoint, not a new decision needing separate sign-off.
+- `POST /puzzles/generate` always uses `RandomPatternSource` (with an optional `seed` for
+  determinism) — there's no way to submit a `ManualPatternSource` pattern over HTTP, since manual
+  patterns are a testing/internal-tooling concern, not something an API client would supply this
+  way. The `ManualPatternSource` class itself remains available for direct Python use (as Stage 6's
+  tests do).
+- Domain exceptions (`GenerationTimeoutError`, `InvalidClueError`) are translated to HTTP 422 at
+  the router boundary; unexpected/unanticipated errors are left to FastAPI's default 500 handling
+  rather than being caught broadly, since masking unknown failures as generic errors would hide
+  real bugs.
 
 ### Blockers / decisions needed
 - (none currently open)

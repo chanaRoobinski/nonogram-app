@@ -1,8 +1,8 @@
 # Progress Tracker — Nonogram App
 
-## Current stage: Stage 7 — FastAPI Layer
+## Current stage: Stage 8 — Image Recognition Interface (stub only)
 ## Status: In Progress (implementation done, PR open, awaiting merge)
-## Active branch: feature/stage-7-api-layer
+## Active branch: feature/stage-8-image-recognition-stub
 ## Last updated: 2026-07-02
 
 ### Completed stages ✅
@@ -31,35 +31,28 @@
   - `PatternSource` ABC (`RandomPatternSource`, `ManualPatternSource`) +
     `generate_puzzle()` generate-and-test loop
   - 89 tests, 100% coverage (as of that stage)
+- [x] Stage 7 — FastAPI Layer (PR #7, merged, CI run 28584623512 green)
+  - `POST /puzzles/generate`, `POST /puzzles/solve`, `/docs`, `/openapi.json`
+  - 100 tests, 100% coverage (as of that stage)
 
 ### Current stage in progress 🚧
-- [ ] Stage 7 — FastAPI Layer
-  - [x] Branch `feature/stage-7-api-layer` created
-  - [x] `fastapi` + `uvicorn[standard]` added to `requirements.txt`; `httpx`
-        (needed by FastAPI's `TestClient`) added to `requirements-dev.txt`
-  - [x] `api/schemas.py`: `GenerateRequest`/`GenerateResponse`,
-        `SolveRequest`/`SolveResponse`, shared `DifficultyLevel` enum
-  - [x] `POST /puzzles/generate` (`generator_router.py`): wraps
-        `generate_puzzle()`; `GenerationTimeoutError` → HTTP 422
-  - [x] `POST /puzzles/solve` (`solver_router.py`): wraps `solve()`;
-        `InvalidClueError` → HTTP 422
-  - [x] `api/main.py` assembles the app; automatic docs at `/docs`,
-        `/openapi.json`
-  - [x] Integration tests (`test_api.py`) via FastAPI's `TestClient`: generate
-        (happy path, determinism for a fixed seed, validation errors),
-        solve (happy path, contradiction, invalid clue, `max_backtrack_depth`),
-        docs/openapi availability, and a monkeypatched test for the
-        generation-timeout → 422 branch (real `RandomPatternSource` rarely
-        fails uniqueness on the very first attempt, so that branch isn't
-        reliably reachable through genuine randomness in a fast test)
-  - [x] `ruff check .` passes; full suite green locally (100 tests, 100%
+- [ ] Stage 8 — Image Recognition Interface (stub only)
+  - [x] Branch `feature/stage-8-image-recognition-stub` created
+  - [x] `image_recognition/interface.py`: `ImageToPatternConverter.convert(image_path)
+        -> Grid` — plain class (not `abc.ABC`/`@abstractmethod`, so it can be
+        instantiated directly and tested per the skill's literal "raises
+        NotImplementedError" spec), body raises `NotImplementedError`
+  - [x] Docstring names this as a future-phase placeholder and the intended
+        toolset (OpenCV / PIL), matching the rationale already recorded in
+        `NONOGRAM_APP_SKILL.md` Section 0
+  - [x] One test confirming `convert()` raises `NotImplementedError`
+  - [x] `ruff check .` passes; full suite green locally (101 tests, 100%
         coverage)
   - [ ] PR opened
   - [ ] CI green on PR
   - [ ] PR merged to `main`
 
 ### Future stages ⏳
-- [ ] Stage 8 — Image Recognition Interface (stub only)
 - [ ] Stage 9 — Documentation & Polish
 
 ### Decisions made along the way
@@ -127,6 +120,12 @@
   the router boundary; unexpected/unanticipated errors are left to FastAPI's default 500 handling
   rather than being caught broadly, since masking unknown failures as generic errors would hide
   real bugs.
+- `ImageToPatternConverter` (Stage 8) is a plain class, not `abc.ABC` with `@abstractmethod`. The
+  skill's spec says the *method* should raise `NotImplementedError` and that a test should confirm
+  that — with `abc.ABC`/`@abstractmethod`, the base class couldn't be instantiated at all (a
+  `TypeError` at construction, not a `NotImplementedError` from calling `convert()`), which doesn't
+  match either the letter or the spirit of the stated test. A plain class with a
+  `raise NotImplementedError` body matches the skill's literal wording exactly.
 
 ### Blockers / decisions needed
 - (none currently open)

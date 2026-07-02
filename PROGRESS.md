@@ -1,8 +1,8 @@
 # Progress Tracker — Nonogram App
 
-## Current stage: Stage 8 — Image Recognition Interface (stub only)
-## Status: In Progress (implementation done, PR open, awaiting merge)
-## Active branch: feature/stage-8-image-recognition-stub
+## Current stage: MVP complete — all 9 stages done
+## Status: Done
+## Active branch: main
 ## Last updated: 2026-07-02
 
 ### Completed stages ✅
@@ -34,26 +34,22 @@
 - [x] Stage 7 — FastAPI Layer (PR #7, merged, CI run 28584623512 green)
   - `POST /puzzles/generate`, `POST /puzzles/solve`, `/docs`, `/openapi.json`
   - 100 tests, 100% coverage (as of that stage)
-
-### Current stage in progress 🚧
-- [ ] Stage 8 — Image Recognition Interface (stub only)
-  - [x] Branch `feature/stage-8-image-recognition-stub` created
-  - [x] `image_recognition/interface.py`: `ImageToPatternConverter.convert(image_path)
-        -> Grid` — plain class (not `abc.ABC`/`@abstractmethod`, so it can be
-        instantiated directly and tested per the skill's literal "raises
-        NotImplementedError" spec), body raises `NotImplementedError`
-  - [x] Docstring names this as a future-phase placeholder and the intended
-        toolset (OpenCV / PIL), matching the rationale already recorded in
-        `NONOGRAM_APP_SKILL.md` Section 0
-  - [x] One test confirming `convert()` raises `NotImplementedError`
-  - [x] `ruff check .` passes; full suite green locally (101 tests, 100%
-        coverage)
-  - [ ] PR opened
-  - [ ] CI green on PR
-  - [ ] PR merged to `main`
+- [x] Stage 8 — Image Recognition Interface (PR #8, merged, CI run 28588885379 green)
+  - `ImageToPatternConverter.convert()` stub, raises `NotImplementedError`
+  - 101 tests, 100% coverage (as of that stage)
+- [x] Stage 9 — Documentation & Polish (PR #9, this PR)
+  - Full `README.md`: installation (incl. `pip install -e .`, verified against
+    a real running `uvicorn` server, not just written from memory), running
+    the API, a verified end-to-end API usage example (generate → solve),
+    architecture diagram, testing instructions
+  - Whole-project coverage check: 100% (target was ≥85%)
+  - `PROGRESS.md` closed out — MVP ready
 
 ### Future stages ⏳
-- [ ] Stage 9 — Documentation & Polish
+- (none — MVP complete; next phases are the separate TypeScript/React frontend
+  and the image-recognition implementation behind Stage 8's stub interface,
+  both explicitly out of scope for this project per
+  `NONOGRAM_APP_SKILL.md` Section 0)
 
 ### Decisions made along the way
 - Python version changed from the originally-planned 3.12+ to **3.10+**: only Python 3.10.7 and

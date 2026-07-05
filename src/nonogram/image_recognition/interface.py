@@ -1,3 +1,9 @@
+"""Stub for a future phase: converting a real-world image (e.g. a photo of
+a picture) into a nonogram pattern automatically, instead of only via
+RandomPatternSource/ManualPatternSource (generator/pattern_source.py). Not
+implemented yet — see ImageToPatternConverter's docstring below.
+"""
+
 from nonogram.core.grid import Grid
 
 
@@ -14,6 +20,9 @@ class ImageToPatternConverter:
     """
 
     def convert(self, image_path: str) -> Grid:
+        """Would convert the image at `image_path` into a fully-determined
+        Grid pattern. Always raises NotImplementedError for now — this is
+        a placeholder, not a partial implementation."""
         raise NotImplementedError(
             "Image-to-nonogram conversion is planned for a future phase and "
             "is not implemented yet."

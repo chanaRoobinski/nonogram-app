@@ -1,3 +1,13 @@
+"""Sources of candidate solution patterns for the puzzle generator, plus the
+utilities to turn a finished pattern into the row/column clues that describe
+it as a nonogram puzzle.
+
+A "pattern" here just means a fully-filled-in Grid (no UNKNOWN cells) that
+will become a puzzle's *solution* — puzzle_generator.py takes a pattern,
+derives its clues via extract_clues(), and checks whether those clues make a
+good puzzle (unique solution, reasonable difficulty) before offering it.
+"""
+
 import random
 from abc import ABC, abstractmethod
 
@@ -22,11 +32,21 @@ class RandomPatternSource(PatternSource):
     contiguous, picture-like regions."""
 
     def __init__(self, density=0.45, smoothing_passes=2, seed=None):
+        """density: the probability any given cell starts out FILLED, before
+        smoothing (0.45 tends to produce patterns that are neither almost
+        empty nor almost solid). smoothing_passes: how many times to apply
+        the neighbor-majority smoothing step. seed: passed straight to
+        random.Random — set it for reproducible/deterministic output
+        (e.g. in tests), or leave it None for genuinely random patterns."""
         self._density = density
         self._smoothing_passes = smoothing_passes
         self._rng = random.Random(seed)
 
     def generate(self, num_rows: int, num_cols: int) -> Grid:
+        """Build a random pattern: first fill every cell independently at
+        random (biased by `density`), then run the smoothing pass
+        `smoothing_passes` times to consolidate the noise into blockier,
+        more picture-like shapes."""
         cells = [
             [
                 Cell.FILLED if self._rng.random() < self._density else Cell.EMPTY
@@ -44,9 +64,14 @@ class ManualPatternSource(PatternSource):
     generate-and-test pipeline as random patterns."""
 
     def __init__(self, grid: Grid):
+        """grid: the fixed pattern this source will always return."""
         self._grid = grid
 
     def generate(self, num_rows: int, num_cols: int) -> Grid:
+        """Return the wrapped grid, as long as its dimensions match what
+        was requested. Raises ValueError on a size mismatch — this source
+        can't "generate" a different size, it can only replay the one
+        pattern it was given."""
         if self._grid.num_rows != num_rows or self._grid.num_cols != num_cols:
             raise ValueError(
                 f"Manual pattern is {self._grid.num_rows}x{self._grid.num_cols}, "
@@ -56,6 +81,12 @@ class ManualPatternSource(PatternSource):
 
 
 def _smooth(cells, num_rows, num_cols):
+    """One pass of a majority-rule cellular-automaton smoothing step: each
+    cell becomes FILLED if at least half of its up-to-8 neighbors (fewer at
+    the grid's edges/corners) are FILLED, else EMPTY. Applied repeatedly,
+    this tends to erode isolated single cells and grow larger contiguous
+    blobs, which is what turns uniform random noise into more picture-like
+    shapes."""
     smoothed = [[Cell.EMPTY] * num_cols for _ in range(num_rows)]
     for r in range(num_rows):
         for c in range(num_cols):
@@ -78,7 +109,8 @@ def _smooth(cells, num_rows, num_cols):
 
 def line_clue(cells) -> Clue:
     """Derive the Clue (run lengths) for a single row/column of FILLED/EMPTY
-    cells."""
+    cells: scan left to right, counting consecutive FILLED cells as one run,
+    ended by any EMPTY cell (or the end of the line)."""
     runs = []
     run_length = 0
     for cell in cells:
@@ -94,7 +126,9 @@ def line_clue(cells) -> Clue:
 
 
 def extract_clues(pattern: Grid):
-    """Derive (row_clues, col_clues) for a fully-determined pattern grid."""
+    """Derive (row_clues, col_clues) for a fully-determined pattern grid —
+    i.e. work out what puzzle clues would describe this exact solution, by
+    applying line_clue() to every row and every column."""
     row_clues = [line_clue(row) for row in pattern.rows]
     col_clues = [line_clue(col) for col in pattern.columns]
     return row_clues, col_clues

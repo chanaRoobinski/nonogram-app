@@ -1,3 +1,12 @@
+"""Turns the raw SolveStats produced by solving a puzzle (solver/engine.py)
+into a human-meaningful difficulty rating: a numeric score, a category
+(Easy/Medium/Hard/Very Hard), and a flag for whether the puzzle is even
+reasonable to hand to a human at all. The exact formula and thresholds here
+were explicitly discussed with and confirmed by the project owner (see
+PROGRESS.md), since there's no single "correct" way to turn solve statistics
+into a difficulty rating — it's a product decision, not a technical one.
+"""
+
 from dataclasses import dataclass
 from enum import Enum, auto
 
@@ -9,6 +18,12 @@ UNSUITABLE_FOR_HUMAN_THRESHOLD = 100
 
 
 class DifficultyCategory(Enum):
+    """The four difficulty tiers a puzzle can be scored into, from easiest
+    to hardest. Members are declared in this order deliberately — code
+    elsewhere (e.g. the generator's "closest match" fallback) relies on
+    being able to measure "how many tiers away" one category is from
+    another by their declaration order."""
+
     EASY = auto()
     MEDIUM = auto()
     HARD = auto()
@@ -17,9 +32,18 @@ class DifficultyCategory(Enum):
 
 @dataclass
 class DifficultyResult:
+    """The result of scoring a solved puzzle's difficulty."""
+
     score: int
+    """The raw numeric difficulty score (see evaluate_difficulty for the formula)."""
+
     category: DifficultyCategory
+    """Which of the four tiers this score falls into."""
+
     suitable_for_human: bool
+    """False if the score is so high the puzzle is considered impractical
+    for a person to solve, even though it's still technically "Very Hard"
+    rather than literally unsolvable."""
 
 
 def evaluate_difficulty(solve_stats) -> DifficultyResult:

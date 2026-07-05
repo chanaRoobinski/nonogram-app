@@ -1,9 +1,22 @@
 # Progress Tracker — Nonogram App
 
-## Current stage: MVP complete — all 9 stages done
+## Current stage: MVP complete — all 9 stages done, plus a post-MVP documentation pass
 ## Status: Done
 ## Active branch: main
 ## Last updated: 2026-07-02
+
+### Post-MVP: full code documentation pass
+- User requested docstrings/comments throughout `src/` so the codebase is fully
+  understandable on its own, beyond the project-level docs (README/PROGRESS/skill file).
+- Added module-level docstrings to every file, class/dataclass-field docstrings, and
+  function docstrings explaining parameters and behavior — with extra depth on the two
+  most algorithmically dense spots: `solver/line_solver.py`'s forward/backward DP
+  (explaining what "boundary", "mandatory gap folding", and the two-direction combine
+  step actually mean) and `solver/engine.py`'s propagate/backtrack loop.
+  This deliberately overrides the project's usual "no comments unless the WHY is
+  non-obvious" default, since the user's explicit goal here was comprehension, not
+  just maintenance.
+- No logic changed — 101 tests still pass, 100% coverage maintained, `ruff check .` clean.
 
 ### Completed stages ✅
 - [x] Stage 0 — Project Scaffolding & CI (pushed directly to `main`, CI run 28551662417 green)

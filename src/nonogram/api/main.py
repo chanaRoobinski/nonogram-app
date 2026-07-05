@@ -1,3 +1,11 @@
+"""FastAPI application entry point. Run with:
+
+    uvicorn nonogram.api.main:app --reload
+
+Interactive docs are then available at /docs (Swagger UI) and /redoc, and
+the raw OpenAPI schema at /openapi.json.
+"""
+
 from fastapi import FastAPI
 
 from nonogram.api.routers.generator_router import router as generator_router
